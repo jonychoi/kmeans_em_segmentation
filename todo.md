@@ -1,0 +1,2 @@
+- load_image 에서 img converter 부분 삭제 (appendix에 추가)
+- kmeans에 주석 삭제
