@@ -1,6 +1,5 @@
 import numpy as np
 from PIL import Image
-import cv2
 
 # KU.raw (720x560 image, each pixel is an 8-bit number)
 # Gundam.raw (600x600 image, each pixel is an 8-bit number)

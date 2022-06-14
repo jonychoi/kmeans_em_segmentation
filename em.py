@@ -35,11 +35,11 @@ def f_logsumexp(x, mean, var, pi):
         subtraction = np.subtract(x, mean[k])
         arg1 = -1.0 / (2 * var[k]) * np.power(subtraction, 2)
         arg2 = -0.5*np.log(2*np.pi*var[k])
-        arg3 = np.sum(arg2 + arg1, axis=1)  # before sum 1xD -> 1x1
+        arg3 = np.sum(arg2 + arg1, axis=1)
         arithmitis = np.log(pi[k]) + arg3
         trick[:, k] = arithmitis
-    # find max of all fk(trick[k]) for each example
-    m = trick.max(axis=1)  # Nx1
+
+    m = trick.max(axis=1)
     m = m.reshape((m.shape[0], 1))
     return trick, m
 
@@ -52,22 +52,21 @@ def update_loglikehood(f, m):
     arg2 = arg1+m
     return np.sum(arg2, axis=0)
 
-# K -> number of clusters
 def update_gamma(f, m):
     f = f-m
-    f = np.exp(f)   # NxK
-    par = np.sum(f, axis=1)  # Nx1
+    f = np.exp(f)
+    par = np.sum(f, axis=1)
     par = par.reshape((par.shape[0],1))
-    result = np.divide(f, par)   # NxK
+    result = np.divide(f, par)
     return result
 
 
-# return matrix with dimensions KxD
+# return matrix with dimensions K
 def update_mean(gamma, x):
-    arith = np.dot(np.transpose(gamma), x)   # (KxN)*(NxD)-> KxD
-    paran = np.sum(gamma, axis=0)  # Kx1
+    arith = np.dot(np.transpose(gamma), x)
+    paran = np.sum(gamma, axis=0) #K
     paran = paran.reshape((paran.shape[0], 1))
-    result = arith/paran    # KxD
+    result = arith/paran #K
     return result
 
 
@@ -79,21 +78,21 @@ def update_variance(gamma, x, mean):
     for k in range(K):
         gamma_k = gamma[:, k]
         gamma_k = gamma_k.reshape((gamma_k.shape[0], 1))
-        subtraction = np.subtract(x, mean[k])   # NxD
-        # ((Nx1).*(NxD)-> NxD->sum row wise -> 1xN -> sum -> 1x1
+        subtraction = np.subtract(x, mean[k]) 
         sub = np.sum(np.sum(np.multiply(np.power(subtraction, 2), gamma_k), axis=1))
         arith[k] = sub
-    paran = D * np.sum(gamma, axis=0)   # Kx1
-    paran = paran.reshape((K, 1))  # Kx1
+    paran = D * np.sum(gamma, axis=0) # Kx1
+    paran = paran.reshape((K, 1)) # Kx1
     return arith/paran
 
 
 class EM:
-    def __init__(self, n_clusters, iter, tol):
+    def __init__(self, n_clusters, iter, tol, name):
         self.n_clusters = n_clusters
         self.iter = iter
         self.out = None
         self.tol = tol
+        self.name = name
 
     def fitting(self, x):
         mean, var, pi = init_parameters(x, self.n_clusters)
@@ -105,7 +104,7 @@ class EM:
         while iteration <= self.iter:
             print('Iteration: ', iteration)
             # E-step
-            gamma = update_gamma(f, m)  # NxK
+            gamma = update_gamma(f, m)  # K
             # M-step
             # update pi
             pi = (np.sum(gamma, axis=0))
@@ -124,17 +123,28 @@ class EM:
                 exit()
             # check if the convergence criterion is met
             if abs(loglikehood-old_loglikehood) < self.tol:
-                print('Convergence criterion is met')
                 print('Total iterations: ', iteration)
                 self.mean = mean
                 self.gamma = gamma
                 self.var = var
                 return mean, gamma, var
-            # update 'safety valve' in order to not loop for an eternity
+                
             iteration += 1
             self.mean = mean
             self.gamma = gamma
             self.var = var
+
+            meantxt = 'mean: {} \n'.format(self.mean).replace('[', '').replace(']', '').replace("  ", ",")
+            gammatxt = 'gamma: {}, shape: {} \n'.format(np.sum(self.gamma, axis = 0) / len(self.gamma), np.sum(self.gamma, axis = 0).shape)
+            vartxt = 'var: {} \n'.format(self.var).replace('[', '').replace(']', '').replace("  ", ",")
+            filename = os.getcwd() + '/results/em/parameter/{}_cluster_{}.txt'.format(self.name, self.n_clusters)
+            
+            file = open(filename, 'w+')
+            file.write(meantxt)
+            file.write(gammatxt)
+            file.write(vartxt)
+            file.close()
+        
         return mean, gamma, var
 
 
@@ -154,10 +164,10 @@ class EM:
         return self.out
             
 
-def main(filename, shape, n_clusters, tol):
+def main(filename, shape, n_clusters, tol, iter):
     arr = load_image_asarray(filename = "./source/{}.raw".format(filename), shape = shape)
 
-    em = EM(n_clusters = n_clusters, iter = 150, tol = tol)
+    em = EM(n_clusters = n_clusters, iter = iter, tol = tol, name = filename)
 
     print("{}'s {} cluster with {} iteration fitting started".format(filename, n_clusters, iter))
     mean, gamma, var = em.fitting(arr)
@@ -169,17 +179,17 @@ def main(filename, shape, n_clusters, tol):
     os.makedirs(save_dir, exist_ok= True)
     
     img = Image.fromarray(output)
-    img.save(save_dir + "{}'s_{}_cluster.bmp".format(filename, n_clusters))
+    img.save(save_dir + "{}'s_{}_cluster_{}_iter.bmp".format(filename, n_clusters, iter))
     img.show()
 
-# main("Golf", (800, 540), 2, tol = 1e-6)
-# main("Golf", (800, 540), 4, tol = 1e-6)
-# main("Golf", (800, 540), 8, tol = 1e-6)
+main("Golf", (540, 800), 2, tol = 1e-3, iter = 400)
+main("Golf", (540, 800), 4, tol = 1e-3, iter = 400)
+main("Golf", (540, 800), 8, tol = 1e-3, iter = 150)
 
-# main("Gundam", (600, 600), 2, tol = 1e-6)
-# main("Gundam", (600, 600), 4, tol = 1e-6)
-main("Gundam", (600, 600), 8, tol = 1e-6)
+main("Gundam", (600, 600), 2, tol = 1e-3, iter = 400)
+main("Gundam", (600, 600), 4, tol = 1e-3, iter = 400)
+main("Gundam", (600, 600), 8, tol = 1e-3, iter = 150)
 
-# main("KU", (720, 560), 2, tol = 1e-6)
-# main("KU", (720, 560), 4, tol = 1e-6)
-# main("KU", (720, 560), 8, tol = 1e-6) 
+main("KU", (560, 720), 2, tol = 1e-3, iter = 400)
+main("KU", (560, 720), 4, tol = 1e-3, iter = 400)
+main("KU", (560, 720), 8, tol = 1e-3, iter = 150)

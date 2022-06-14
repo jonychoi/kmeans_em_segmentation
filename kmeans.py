@@ -90,14 +90,14 @@ def main(filename, shape, n_clusters, iter):
     img.save(save_dir + "{}'s_{}_cluster_of_{}_iter.bmp".format(filename, n_clusters, iter))
     img.show()
 
-main("Golf", (800, 540), 2, 10)
-main("Golf", (800, 540), 4, 10)
-main("Golf", (800, 540), 8, 10)
+main("Golf", (540, 800), 2, 10)
+main("Golf", (540, 800), 4, 10)
+main("Golf", (540, 800), 8, 10)
 
 main("Gundam", (600, 600), 2, 10)
 main("Gundam", (600, 600), 4, 10)
 main("Gundam", (600, 600), 8, 10)
 
-main("KU", (720, 560), 2, 10)
-main("KU", (720, 560), 4, 10)
-main("KU", (720, 560), 8, 10)
+main("KU", (560, 720), 2, 10)
+main("KU", (560, 720), 4, 10)
+main("KU", (560, 720), 8, 10)
