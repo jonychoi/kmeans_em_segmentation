@@ -3,9 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-.kmeans_.py
-._em.py
-.test.py
+legacy/
 
 # C extensions
 *.so
