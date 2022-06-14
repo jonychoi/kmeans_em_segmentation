@@ -3,11 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+<<<<<<< HEAD
 ./kmeans_.py
 ./_em.py
 ./test.py
 
 
+=======
+>>>>>>> 06cb49e3363ec45c3149c888e10890359d488cdc
 # C extensions
 *.so
 
