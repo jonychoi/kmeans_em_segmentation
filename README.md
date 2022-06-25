@@ -1,1 +1,1 @@
-# grayscale_kmeans_em_segmentation
+# Segmentation with KMeans and GMM
